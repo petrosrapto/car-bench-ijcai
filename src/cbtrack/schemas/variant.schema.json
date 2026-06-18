@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://car-bench/cbtrack/variant.schema.json",
+  "title": "cbtrack variant manifest",
+  "type": "object",
+  "required": ["variant_id", "versions"],
+  "properties": {
+    "manifest_version": { "type": "integer" },
+    "variant_id": { "type": "string" },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["variant_ref", "lifecycle"],
+        "properties": {
+          "variant_ref": { "type": "string" },
+          "created_at": { "type": ["string", "null"] },
+          "lifecycle": { "enum": ["draft", "built", "validated", "promoted", "submitted"] },
+          "scaffold_kind": { "type": ["string", "null"] },
+          "image": { "type": ["string", "null"] },
+          "image_digest": { "type": ["string", "null"] },
+          "agent_llm": { "type": ["string", "null"] },
+          "agent_thinking": { "type": ["string", "boolean", "null"] },
+          "agent_reasoning_effort": { "type": ["string", "null"] },
+          "agent_interleaved_thinking": { "type": ["string", "boolean", "null"] },
+          "agent_temperature": { "type": ["string", "number", "null"] },
+          "system_prompt_sha256": { "type": ["string", "null"] },
+          "harness_git_sha": { "type": ["string", "null"] },
+          "source_dir": { "type": ["string", "null"] },
+          "env_contract": {
+            "type": "object",
+            "properties": {
+              "required": { "type": "array", "items": { "type": "string" } },
+              "optional": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "build": {
+            "type": "object",
+            "properties": {
+              "dockerfile": { "type": ["string", "null"] },
+              "base_image": { "type": ["string", "null"] },
+              "build_git_sha": { "type": ["string", "null"] },
+              "uv_lock_sha256": { "type": ["string", "null"] },
+              "image_digest": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

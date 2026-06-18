@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://car-bench/cbtrack/run_manifest.schema.json",
+  "title": "cbtrack run manifest",
+  "type": "object",
+  "required": ["run_id", "variant_ref", "status", "config_hash", "eval", "provenance"],
+  "properties": {
+    "manifest_version": { "type": "integer" },
+    "run_id": { "type": "string" },
+    "variant_ref": { "type": ["string", "null"] },
+    "variant_id": { "type": ["string", "null"] },
+    "status": { "enum": ["queued", "running", "completed", "failed", "partial"] },
+    "created_at": { "type": ["string", "null"] },
+    "started_at": { "type": ["string", "null"] },
+    "completed_at": { "type": ["string", "null"] },
+    "config_hash": { "type": "string" },
+    "eval": {
+      "type": "object",
+      "properties": {
+        "num_trials": { "type": "integer" },
+        "task_split": { "type": "string" },
+        "max_steps": { "type": "integer" },
+        "tasks_base_num_tasks": { "type": "integer" },
+        "tasks_hallucination_num_tasks": { "type": "integer" },
+        "tasks_disambiguation_num_tasks": { "type": "integer" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "scenario_sha256": { "type": ["string", "null"] },
+        "agent_image_digest": { "type": ["string", "null"] },
+        "evaluator_image_digest": { "type": ["string", "null"] },
+        "dataset_version": { "type": ["string", "null"] },
+        "dataset_split": { "type": ["string", "null"] },
+        "harness_git_sha": { "type": ["string", "null"] },
+        "tracker_git_sha": { "type": ["string", "null"] },
+        "car_bench_git_sha": { "type": ["string", "null"] },
+        "repo_dirty": { "type": ["boolean", "null"] },
+        "execution_mode": { "type": "string" },
+        "compose_project": { "type": ["string", "null"] },
+        "seeds": { "type": "object" },
+        "ports": { "type": "object" }
+      }
+    },
+    "result_json_path": { "type": ["string", "null"] },
+    "headline": { "type": "object" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "hypothesis": { "type": ["string", "null"] },
+    "notes": { "type": ["string", "null"] }
+  }
+}

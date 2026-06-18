@@ -30,9 +30,15 @@ car-bench-evaluator = [
     "nest-asyncio>=1.6.0",
     "car-bench",
 ]
+tracker = [
+    "duckdb>=1.1.0",
+    "fastapi>=0.115.0",
+    "tomli-w>=1.0.0",
+]
 
 [project.scripts]
 car-bench-run = "agentbeats.run_scenario:main"
+cbtrack = "cbtrack.cli:main"
 
 [dependency-groups]
 dev = [
@@ -50,4 +56,4 @@ car-bench = { path = "third_party/car-bench" }
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agentbeats"]
+packages = ["src/agentbeats", "src/cbtrack"]
