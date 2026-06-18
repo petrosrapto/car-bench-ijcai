@@ -29,11 +29,23 @@ _CONFIGS = {"smoke": scenario_gen.SMOKE, "test": scenario_gen.TEST_SET, "hidden"
 def _cmd_run(args: argparse.Namespace) -> int:
     from . import runner  # lazy: avoids importing harness deps for other commands
 
+    env: dict[str, str] = {}
+    if args.execution == "docker":
+        # env-var NAMES with compose interpolation so `docker compose --env-file .env` fills them
+        env = {
+            "AGENT_LLM": args.agent_llm or "${AGENT_LLM:?Set AGENT_LLM}",
+            "AGENT_TEMPERATURE": "${AGENT_TEMPERATURE:-0.0}",
+            "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY:-}",
+            "OPENAI_API_KEY": "${OPENAI_API_KEY:-}",
+            "GEMINI_API_KEY": "${GEMINI_API_KEY:-}",
+            "LOGURU_LEVEL": "${LOGURU_LEVEL:-INFO}",
+        }
     agent = AgentSpec(
         name=args.variant,
         agent_module=args.agent_module,
         agent_llm=args.agent_llm,
         image=args.image,
+        env=env,
     )
     config = _CONFIGS.get(args.config, scenario_gen.TEST_SET)
     manifest = runner.run(
@@ -43,6 +55,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
         scaffold_kind=args.scaffold,
         tags=args.tag or [],
         hypothesis=args.hypothesis,
+        execution_mode=args.execution,
+        dry_run=args.dry_run,
         show_logs=args.show_logs,
     )
     print(json.dumps({
@@ -65,6 +79,15 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
     roots = [Path(p) for p in args.paths] or [paths.repo_root() / "output"]
     run_ids = backfill_mod.backfill_paths(roots)
     print(json.dumps({"backfilled": len(run_ids), "run_ids": run_ids[:20]}, indent=2))
+    return 0
+
+
+def _cmd_import_baselines(args: argparse.Namespace) -> int:
+    if args.all:
+        run_ids = backfill_mod.import_all_baselines(Path(args.dirs[0]))
+    else:
+        run_ids = backfill_mod.import_carbench_baselines([Path(p) for p in args.dirs], set_label=args.set_label)
+    print(json.dumps({"imported": len(run_ids), "run_ids": run_ids}, indent=2))
     return 0
 
 
@@ -115,7 +138,10 @@ def build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--agent-llm", default=None, help="AGENT_LLM (LiteLLM model id)")
     pr.add_argument("--agent-module", default=scenario_gen.DEFAULT_AGENT_MODULE)
     pr.add_argument("--scaffold", default="bare")
-    pr.add_argument("--image", default=None, help="agent image (for digest provenance)")
+    pr.add_argument("--image", default=None, help="agent image (required for --execution docker)")
+    pr.add_argument("--execution", choices=["local", "docker"], default="local")
+    pr.add_argument("--dry-run", action="store_true",
+                    help="docker only: generate compose artifacts without running containers")
     pr.add_argument("--tag", action="append", help="repeatable run tag")
     pr.add_argument("--hypothesis", default=None)
     pr.add_argument("--show-logs", action="store_true")
@@ -127,6 +153,12 @@ def build_parser() -> argparse.ArgumentParser:
     pb = sub.add_parser("backfill", help="ingest pre-existing native output JSONs")
     pb.add_argument("paths", nargs="*", help="files/dirs (default: output/)")
     pb.set_defaults(func=_cmd_backfill)
+
+    pib = sub.add_parser("import-baselines", help="import official car-bench results/ as reference runs")
+    pib.add_argument("dirs", nargs="+", help="split dirs forming one set; or a single results/ root with --all")
+    pib.add_argument("--all", action="store_true", help="treat the single arg as a results/ root and import every set")
+    pib.add_argument("--set-label", default="test")
+    pib.set_defaults(func=_cmd_import_baselines)
 
     pbd = sub.add_parser("build", help="record a reproducibility build for a checkpoint")
     pbd.add_argument("variant_ref")

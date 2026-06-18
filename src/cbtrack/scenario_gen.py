@@ -29,6 +29,7 @@ except Exception:  # pragma: no cover
 DEFAULT_AGENT_MODULE = "src/track_1_agent_under_test/server.py"
 DEFAULT_EVALUATOR_MODULE = "src/evaluator/server.py"
 EVALUATOR_IMAGE = "ghcr.io/car-bench/car-bench-evaluator:latest"
+DOCKER_PORT = 9009  # internal container port used by generate_compose.py (isolated network)
 
 
 @dataclass

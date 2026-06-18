@@ -28,10 +28,13 @@ node_modules/
 web/node_modules/
 web/dist/
 
-# cbtrack — experiment data tree
-# Track the FAIR record (registry indexes, manifests, checkpoints, submissions,
-# and the verbatim result.json) but NOT the rebuildable store (Parquet/DuckDB/JSONL).
-experiments/store/
+# cbtrack — experiment data tree (kept LOCAL by default)
+# Experiment runs/baselines are local research data: large, often derived from
+# the gitignored third_party/ (the authors' results), and reproducible. They are
+# NOT committed to the public repo. To opt into a FAIR-in-git record later (per
+# docs/cbtrack/adr/0005), un-ignore experiments/registry/ + experiments/runs/**/
+# manifest.json and use Git LFS for the large result.json payloads.
+experiments/
 .cbtrack_test_tmp/
 
 # TypeScript incremental build info

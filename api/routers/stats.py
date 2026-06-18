@@ -40,13 +40,15 @@ def _filters(run_id: str | None, variant_ref: str | None, split: str | None,
 
 
 def _latest_run_per_variant() -> list[dict]:
+    # Order by run_id (UTC-compact-timestamp prefix => chronological, never NULL)
+    # rather than completed_at, which may be NULL for imported/baseline runs.
     return deps.query(
         """
         select variant_ref, variant_id, run_id, completed_at
         from runs r
         where variant_ref is not null
-          and completed_at = (
-              select max(completed_at) from runs r2 where r2.variant_ref = r.variant_ref
+          and run_id = (
+              select max(run_id) from runs r2 where r2.variant_ref = r.variant_ref
           )
         """
     )
@@ -61,7 +63,7 @@ def headline(variant_ref: str | None = None, split: str = "overall",
     elif variant_ref:
         rows = deps.query(
             "select variant_ref, variant_id, run_id from runs where variant_ref=? "
-            "order by completed_at desc limit 1", [variant_ref])
+            "order by run_id desc limit 1", [variant_ref])
         targets = rows
     else:
         targets = _latest_run_per_variant()
@@ -168,7 +170,7 @@ def compare(variant_refs: str = Query(..., description="comma-separated variant_
     result = []
     for ref in refs:
         run = deps.query(
-            "select run_id from runs where variant_ref=? order by completed_at desc limit 1", [ref])
+            "select run_id from runs where variant_ref=? order by run_id desc limit 1", [ref])
         run_id = run[0]["run_id"] if run else None
         where, params = _filters(run_id, ref, split, None)
         per_task = deps.query(
