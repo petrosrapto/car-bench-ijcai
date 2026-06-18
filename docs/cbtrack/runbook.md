@@ -46,6 +46,23 @@ to `result.json`, writes `manifest.json` + `env.captured.json`, appends to the
 registry, and refreshes the store. Requires the relevant API keys in `.env`
 (e.g. `GEMINI_API_KEY` for the user simulator + judge, the agent provider key).
 
+**Docker mode** (matches the official submission path — official evaluator image
++ your agent image, wired by `generate_compose.py`):
+
+```bash
+# dry run: generate the compose artifacts only (no daemon needed) to inspect them
+cbtrack run --variant my-method --config smoke --execution docker --dry-run \
+  --image ghcr.io/<you>/car-bench-agent:latest
+
+# real run: needs Docker + a built/pulled agent image + keys in .env
+cbtrack run --variant my-method --config test --execution docker \
+  --image ghcr.io/<you>/car-bench-agent:latest
+```
+
+Each docker run uses a unique compose project (`-p cb-<run_id>`) and a per-run
+results mount, so concurrent runs never collide. (Note: a repo path containing
+spaces can break docker volume mounts — keep the checkout in a space-free path.)
+
 ## 3. Backfill pre-existing results
 
 ```bash
@@ -54,6 +71,17 @@ cbtrack refresh                     # rebuild the DuckDB/Parquet store
 ```
 
 `backfill` is idempotent (deterministic run_ids), so re-running never duplicates.
+
+**Import the official author baselines** as reference runs to populate the
+dashboard with the real leaderboard (one run per model × evaluation set):
+
+```bash
+cbtrack import-baselines third_party/car-bench/results --all
+```
+
+These land as `baseline-*` variants (scaffold `baseline`, `run_id` prefixed
+`00000000T000000Z`, `provenance.execution_mode = "imported"`) so they never mix
+with your own runs. Remove with `rm -rf experiments/runs/00000000* && cbtrack refresh`.
 
 ## 4. Dashboard
 
